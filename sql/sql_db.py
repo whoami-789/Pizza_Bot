@@ -1,8 +1,10 @@
+import asyncio
 import sqlite3 as sq
 
 import requests
 
 from create_bot import bot
+from handlers import client
 from keyboards import client_kb_ru, admin_kb, client_kb_eng, client_kb_uz
 
 
@@ -21,7 +23,8 @@ def sql_start():
         ', idc INTEGER, psize TEXT, FOREIGN KEY (idc) REFERENCES category (id))')
     base.execute(
         'CREATE TABLE IF NOT EXISTS orders(id INTEGER PRIMARY KEY AUTOINCREMENT, dateC TEXT,'
-        ' address TEXT, fullprice INTEGER, received INTEGER'
+        ' address TEXT, fullprice INTEGER, received INTEGER, longtitude text, latitude text, send integer, '
+        'star integer, feedback text'
         ',idu INTEGER, FOREIGN KEY (idu) REFERENCES user (chat_id))')
     base.execute('create table if not exists cart(idm integer, ido integer, amount integer, price integer, '
                  'foreign key (idm) references menu (id), foreign key (ido) references orders (id),'
@@ -180,7 +183,8 @@ async def sql_view_snack_eng(message):
 async def sql_view_drink(message):
     a = cur.execute("select price from menu where idc=5 and name like ? and psize=0.5", (message.text,)).fetchone()
     for ret in cur.execute(
-            "SELECT img, name, description, price FROM menu where idc=5 and name like ? and psize=1", (message.text,)).fetchall():
+            "SELECT img, name, description, price FROM menu where idc=5 and name like ? and psize=1",
+            (message.text,)).fetchall():
         await bot.send_photo(message.from_user.id, ret[0], f'{ret[1]}\nЦены:\n '
                                                            f'0.5 литра {a[0]} сум\n'
                                                            f'1 литр {ret[3]} сум',
@@ -190,7 +194,8 @@ async def sql_view_drink(message):
 async def sql_view_drink_uz(message):
     a = cur.execute("select price from menu where idc=5 and name like ? and psize=0.5", (message.text,)).fetchone()
     for ret in cur.execute(
-            "SELECT img, name, description, price FROM menu where idc=5 and name like ? and psize=1", (message.text,)).fetchall():
+            "SELECT img, name, description, price FROM menu where idc=5 and name like ? and psize=1",
+            (message.text,)).fetchall():
         await bot.send_photo(message.from_user.id, ret[0], f'{ret[1]}\nNarxlar:\n '
                                                            f'0.5 litr {a[0]} sum\n'
                                                            f'1 litr {ret[3]} sum',
@@ -200,7 +205,8 @@ async def sql_view_drink_uz(message):
 async def sql_view_drink_eng(message):
     a = cur.execute("select price from menu where idc=5 and name like ? and psize=0.5", (message.text,)).fetchone()
     for ret in cur.execute(
-            "SELECT img, name, description, price FROM menu where idc=5 and name like ? and psize=1", (message.text,)).fetchall():
+            "SELECT img, name, description, price FROM menu where idc=5 and name like ? and psize=1",
+            (message.text,)).fetchall():
         await bot.send_photo(message.from_user.id, ret[0], f'{ret[1]}\nPrice:\n '
                                                            f'0.5 liter {a[0]} sum\n'
                                                            f'1 liter {ret[3]} sum',
@@ -278,7 +284,7 @@ async def sql_to_cart_other(state):
 
 
 async def create_order_number(message):
-    cur.execute('insert into orders (dateC, idu, received) values (date(),?,0)', (message.chat.id,))
+    cur.execute('insert into orders (dateC, idu, received, send) values (date(),?,0,0)', (message.chat.id,))
     base.commit()
 
 
@@ -333,6 +339,7 @@ async def delivery_location(message):
     cur.execute('update orders set longtitude=?, latitude=? where idu=? and dateC=date() and received=0',
                 (message.location.longitude, message.location.latitude, message.chat.id,))
     base.commit()
+
 
 async def self_del(message):
     cur.execute('update orders set address=? where idu=? and dateC=date() and received=0',
@@ -422,24 +429,26 @@ async def show_cart_eng(message):
 
 
 async def send_order(message):
+    cur.execute('update orders set send=? where dateC=date() and idu=?', (1, message.chat.id,))
+    base.commit()
     for ret in cur.execute('select orders.longtitude, orders.latitude, user.pnumber, user.first_name from orders '
-                           'inner join user on user.chat_id = orders.idu where dateC=date() and idu=? and received=0',
-                           (message.chat.id,)):
-        await bot.send_location(-638891228, ret[1], ret[0])
-        await bot.send_message(-638891228, f'{ret[3]}\n {ret[2]}')
+                           'inner join user on user.chat_id = orders.idu where dateC=date() and idu=? and received=0 '
+                           'and send=1', (message.chat.id,)):
+        await bot.send_location(596927092, ret[1], ret[0])
+        await bot.send_message(596927092, f'{ret[3]}\n {ret[2]}')
     for ret in cur.execute(
             'select orders.id, menu.name, menu.psize, menu.price, cart.amount from orders '
             'inner join cart on orders.id = cart.ido '
             'inner join menu on menu.id = cart.idm '
-            'inner join user on orders.idu = user.chat_id where chat_id=? and orders.dateC=date() and orders.received=0'
+            'inner join user on orders.idu = user.chat_id where chat_id=? and orders.dateC=date() and orders.received=0 and send=1'
             , (message.chat.id,)).fetchall():
-        await bot.send_message(-638891228,
+        await bot.send_message(596927092,
                                f'Номер заказа: {ret[0]}\n{ret[1]} {ret[2]} см\nЦена: {ret[3] * ret[4]} сум\nКолличество: {ret[4]}',
                                reply_markup=admin_kb.inline_kb_recive)
     for a in cur.execute('select sum(menu.price*amount) from cart, menu where ido=(select id from orders '
-                         'where dateC=date() and idu=? and received=0) and menu.id=cart.idm',
+                         'where dateC=date() and idu=? and received=0 and send=1) and menu.id=cart.idm',
                          (message.chat.id,)).fetchone():
-        await bot.send_message(-638891228, f'Полная стоимость заказа: {a} сум')
+        await bot.send_message(596927092, f'Полная стоимость заказа: {a} сум')
 
 
 async def my_orders(message):
@@ -457,10 +466,20 @@ async def my_orders(message):
 
 async def tip(callback):
     a = callback.message.text.split()
-    cur.execute('update orders set received=1 where id=?', (a[2],))
+    cur.execute('update orders set received=1 where id=? and send=1', (a[2],))
     base.commit()
-    print(callback.message.chat.id)
     await callback.message.edit_reply_markup(reply_markup=admin_kb.inline_kb_recive_done)
+    for ret in cur.execute('select idu from main.orders where id=?', (a[2],)):
+        await asyncio.sleep(10)
+        for b in cur.execute('select lang from user '
+                             'where chat_id=(select idu from main.orders where id=?)', (a[2],)).fetchone():
+            if b == 'ru':
+                await bot.send_message(ret[0], 'Оцение качество обслуживания пожалуйста',
+                                       reply_markup=client_kb_ru.marks)
+            elif b == 'uz':
+                await bot.send_message(ret[0], 'Iltimos, xizmat sifatini baholang', reply_markup=client_kb_uz.marks)
+            elif b == 'eng':
+                await bot.send_message(ret[0], 'Rate the quality of service please', reply_markup=client_kb_eng.marks)
 
 
 async def delete_cart(callback):
@@ -469,9 +488,10 @@ async def delete_cart(callback):
                 '((name=?) and (psize=?))) '
                 'and ido=(select id from orders where idu=? and dateC=date())',
                 (
-                a[3] or a[3] + ' ' + a[4] or a[3] + ' ' + a[4] + ' ' + a[5] or a[3] + ' ' + a[4] + ' ' + a[5] + ' ' + a[
-                    6],
-                a[4] or a[5] or a[6] or a[7], callback.message.chat.id,))
+                    a[3] or a[3] + ' ' + a[4] or a[3] + ' ' + a[4] + ' ' + a[5] or a[3] + ' ' + a[4] + ' ' + a[
+                        5] + ' ' + a[
+                        6],
+                    a[4] or a[5] or a[6] or a[7], callback.message.chat.id,))
     cur.execute('delete from cart where idm=(select id from menu where '
                 'name=?) '
                 'and ido=(select id from orders where idu=? and dateC=date())',
@@ -489,9 +509,10 @@ async def delete_cart_uz(callback):
                 '((name=?) and (psize=?))) '
                 'and ido=(select id from orders where idu=? and dateC=date())',
                 (
-                a[3] or a[3] + ' ' + a[4] or a[3] + ' ' + a[4] + ' ' + a[5] or a[3] + ' ' + a[4] + ' ' + a[5] + ' ' + a[
-                    6],
-                a[4] or a[5] or a[6] or a[7], callback.message.chat.id,))
+                    a[3] or a[3] + ' ' + a[4] or a[3] + ' ' + a[4] + ' ' + a[5] or a[3] + ' ' + a[4] + ' ' + a[
+                        5] + ' ' + a[
+                        6],
+                    a[4] or a[5] or a[6] or a[7], callback.message.chat.id,))
     cur.execute('delete from cart where idm=(select id from menu where '
                 'name=?) '
                 'and ido=(select id from orders where idu=? and dateC=date())',
@@ -530,9 +551,10 @@ async def update_amount_plus(callback):
     cur.execute('update cart set amount=amount+1 where idm=(select id from menu where '
                 '((name=?) and (psize=?))) and ido=?',
                 (
-                a[3] or a[3] + ' ' + a[4] or a[3] + ' ' + a[4] + ' ' + a[5] or a[3] + ' ' + a[4] + ' ' + a[5] + ' ' + a[
-                    6],
-                a[4] or a[5] or a[6] or a[7], a[2],))
+                    a[3] or a[3] + ' ' + a[4] or a[3] + ' ' + a[4] + ' ' + a[5] or a[3] + ' ' + a[4] + ' ' + a[
+                        5] + ' ' + a[
+                        6],
+                    a[4] or a[5] or a[6] or a[7], a[2],))
     cur.execute('update cart set amount=amount+1 where idm=(select id from menu where '
                 'name=?) and ido=?',
                 (a[3] + ' ' + a[4] or a[3] + ' ' + a[4] + ' ' + a[5],
@@ -701,15 +723,79 @@ async def update_amount_minus_eng(callback):
 
 
 async def delete_order(message):
-    cur.execute('delete from cart where idm=(select id from orders where dateC=date() and idu=? and received=0)',
-                (message.chat.id,))
-    cur.execute('delete from orders where idu=? and dateC=date() and received=0', (message.chat.id,))
+    cur.execute(
+        'delete from cart where idm=(select id from orders where dateC=date() and idu=? and received=0 and send=0)',
+        (message.chat.id,))
+    cur.execute('delete from orders where idu=? and dateC=date() and received=0 and send=0', (message.chat.id,))
     base.commit()
 
 
 async def clear_cart(message):
     cur.execute('delete from cart where idm=(select id from orders where dateC=date() and idu=? and received=0)',
                 (message.chat.id,))
+
+
+async def check_number(message):
+    for i in cur.execute('select pnumber from user where chat_id=?', (message.chat.id,)).fetchone():
+        if i == '0':
+            await message.answer(
+                'Пожалуйста нажмите на кнопку "📱Отправить номер телефона", без номера телефона заказ невозможен')
+        else:
+            await message.answer('Отправьте пожалуйста ваше местоположение😊', reply_markup=client_kb_ru.kb_address)
+
+
+async def check_number_uz(message):
+    for i in cur.execute('select pnumber from user where chat_id=?', (message.chat.id,)).fetchone():
+        if i == '0':
+            await message.answer(
+                'Iltimos, "📱 Telefon raqamini yuborish" tugmasini bosing, telefon raqamisiz buyurtma berish mumkin emas')
+        else:
+            await message.answer('Iltimos, manzilingizni yuboring😊', reply_markup=client_kb_uz.kb_address)
+
+
+async def check_number_eng(message):
+    for i in cur.execute('select pnumber from user where chat_id=?', (message.chat.id,)).fetchone():
+        if i == '0':
+            await message.answer(
+                'Please click on the button "📱 Send phone number", without a phone number the order is not possible')
+        else:
+            await message.answer('Please send your location😊', reply_markup=client_kb_eng.kb_address)
+
+
+async def star(message):
+    cur.execute('update orders set star=? where idu=? and received=1 and send=1 and dateC=date()'
+                , (message.text, message.chat.id,))
+    base.commit()
+    for b in cur.execute('select lang from user '
+                         'where chat_id=?', (message.chat.id,)).fetchone():
+        if b == 'ru':
+            await message.answer('Напишите подробный отзыв, если хотите', reply_markup=client_kb_ru.dont_want)
+        elif b == 'uz':
+            await message.answer('Agar xohlasangiz, batafsil sharh yozing)', reply_markup=client_kb_uz.dont_want)
+        elif b == 'eng':
+            await message.answer('Write a detailed review if you want)', reply_markup=client_kb_eng.dont_want)
+
+
+async def feedback(message):
+    cur.execute('update orders set star=? where idu=? and received=1 and send=1 and dateC=date()'
+                , (message.text, message.chat.id,))
+    base.commit()
+    for b in cur.execute('select lang from user '
+                         'where chat_id=?', (message.chat.id,)).fetchone():
+        if b == 'ru':
+            await bot.send_message(message.chat.id, 'Спасибо за отзыв, вы улучшаете наш сервис😊',
+                                   reply_markup=client_kb_ru.kb_main)
+        elif b == 'uz':
+            await bot.send_message(message.chat.id, 'Mulohazangiz uchun rahmat, xizmatimizni yaxshilaysiz😊',
+                                   reply_markup=client_kb_uz.kb_main)
+        elif b == 'eng':
+            await bot.send_message(message.chat.id, 'Thank you for your feedback, you improve our service😊',
+                                   reply_markup=client_kb_eng.kb_main)
+
+    for ret in cur.execute('select id, star, feedback, first_name, pnumber from main.orders'
+                           ' inner join user on chat_id = orders.idu where idu=? and received=1 and send=1 and dateC=date()'
+            , (message.chat.id,)):
+        await bot.send_message(596927092, f'Пришел отзыв!!!\n {ret[1]}\n {ret[2]}\n {ret[3]}\n {ret[4]}')
 
 
 async def amount():

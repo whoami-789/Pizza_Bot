@@ -26,6 +26,13 @@ user_data = KeyboardButton('Mening tafsilotlarim')
 cancel = KeyboardButton('❗Bekor qilish')
 make_order = KeyboardButton("👍🏽Tekshirib ko'rmoq")
 
+mark_5 = KeyboardButton('Ajoyib 🌟🌟🌟🌟🌟')
+mark_4 = KeyboardButton('Yaxshi 🌟🌟🌟🌟')
+mark_3 = KeyboardButton('Yoqdi 🌟🌟🌟')
+mark_2 = KeyboardButton('Boladi 🌟🌟')
+mark_1 = KeyboardButton('Yomon 🌟')
+mark_none = KeyboardButton('Hohlamayman')
+
 margarita = KeyboardButton('Margarita')
 chick = KeyboardButton("TOVUQ VA QO'ZIQORINLI")
 cheeze = KeyboardButton("To'rt xil PISHLOQ")
@@ -39,7 +46,6 @@ tuna = KeyboardButton('Tuna bilan ajoyib pizza')
 seafood = KeyboardButton('Dengiz mahsulotlari')
 kebab = KeyboardButton('Shashlik')
 burger = KeyboardButton('Pitsa-Burger')
-
 
 pizasouse = KeyboardButton('Pitsa sous')
 ketchup = KeyboardButton('Kechup')
@@ -56,12 +62,10 @@ nagets = KeyboardButton('Tovuqli nagets')
 chkub = KeyboardButton('Pishloq kublari')
 it_mesh = KeyboardButton('Italiya mishmashi')
 
-
 pepsi = KeyboardButton('Pepsi kola')
 water = KeyboardButton('Gazlangan suv')
 sok = KeyboardButton('Sharbatlar litr')
 fanta = KeyboardButton('Fanta')
-
 
 mini_margarita = KeyboardButton('Mini Margarita')
 mini_chick = KeyboardButton("Mini TOVUQ VA QO'ZIQORINLI")
@@ -125,6 +129,8 @@ kb_kafe = ReplyKeyboardMarkup(resize_keyboard=True)
 kb_mydata = ReplyKeyboardMarkup(resize_keyboard=True)
 kb_del_or_self = ReplyKeyboardMarkup(resize_keyboard=True)
 kb_cart = ReplyKeyboardMarkup(resize_keyboard=True)
+marks = ReplyKeyboardMarkup(resize_keyboard=True)
+dont_want = ReplyKeyboardMarkup(resize_keyboard=True)
 
 kb_main.add(order).row(myorders, user_data, feedback)
 kb_menu.row(main_menu, basket).row(piza, mini_pizza).row(drink, salad).row(souse, snack, sets)
@@ -155,3 +161,7 @@ kb_address.add(location, send_order).row(main_menu)
 kb_kafe.row(kafe_1, kafe_2).row(main_menu, back_to_menu)
 
 kb_cart.row(make_order).row(clear, back_to_menu)
+
+marks.row(mark_none, mark_5, mark_4).row(mark_3, mark_2, mark_1)
+
+dont_want.add(mark_none)

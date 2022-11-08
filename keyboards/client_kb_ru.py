@@ -31,6 +31,13 @@ cancel = KeyboardButton('❗Отмена')
 clear = KeyboardButton('🌀 Очистить корзину')
 make_order = KeyboardButton('👍🏽Оформить заказ')
 
+mark_5 = KeyboardButton('Отлично 🌟🌟🌟🌟🌟')
+mark_4 = KeyboardButton('Хорошо 🌟🌟🌟🌟')
+mark_3 = KeyboardButton('Нормально 🌟🌟🌟')
+mark_2 = KeyboardButton('Так себе 🌟🌟')
+mark_1 = KeyboardButton('Плохо 🌟')
+mark_none = KeyboardButton('Не хочу')
+
 margarita = KeyboardButton('Маргарита')
 chick = KeyboardButton('Курица с грибами')
 cheeze = KeyboardButton('Четыре сыра')
@@ -127,6 +134,8 @@ kb_kafe = ReplyKeyboardMarkup(resize_keyboard=True)
 kb_mydata = ReplyKeyboardMarkup(resize_keyboard=True)
 kb_del_or_self = ReplyKeyboardMarkup(resize_keyboard=True)
 kb_cart = ReplyKeyboardMarkup(resize_keyboard=True)
+marks = ReplyKeyboardMarkup(resize_keyboard=True)
+dont_want = ReplyKeyboardMarkup(resize_keyboard=True)
 
 kb_language.row(ru, uz, eng)
 kb_main.add(order).row(myorders, user_data, feedback)
@@ -158,3 +167,7 @@ kb_address.add(location, send_order).row(main_menu)
 kb_kafe.row(kafe_1, kafe_2).row(main_menu, back_to_menu)
 
 kb_cart.row(make_order).row(clear, back_to_menu)
+
+marks.row(mark_none, mark_5, mark_4).row(mark_3, mark_2, mark_1)
+
+dont_want.add(mark_none)

@@ -23,6 +23,11 @@ async def command_start(message: types.Message):
         await message.reply('Общение с ботом в лс, напиши ему')
 
 
+@dp.message_handler(commands=['num'])
+async def comm(message: types.Message):
+    await sql_db.check_number(message)
+
+
 @dp.message_handler(text=['🇷🇺 Русский', "🇺🇿 O'zbek tili", '🇬🇧 English'])
 async def command_language(message: types.Message):
     if message.text == '🇷🇺 Русский':
@@ -155,6 +160,7 @@ async def command_back_menu(message: types.Message, state: FSMContext):
 
 @dp.message_handler(Text(equals=['🔙 В главное меню', '🔙 To main menu', '🔙 Asosiy menyuga']))
 async def command_main_menu(message: types.Message):
+    await sql_db.delete_order(message)
     if message.text == '🔙 В главное меню':
         await message.answer('Вы в главном меню', reply_markup=client_kb_ru.kb_main)
     elif message.text == '🔙 To main menu':
@@ -836,11 +842,11 @@ async def cancel(message: types.Message):
 @dp.message_handler(text=['▶️Продолжить оформление заказа', '▶️Continue checkout', '▶️Buyurtmani davom eting'])
 async def continue_order(message: types.Message):
     if message.text == '▶️Продолжить оформление заказа':
-        await message.answer('Отправьте пожалуйста ваше местоположение😊', reply_markup=client_kb_ru.kb_address)
+        await sql_db.check_number(message)
     elif message.text == '▶️Buyurtmani davom eting':
-        await message.answer('Iltimos, manzilingizni yuboring😊', reply_markup=client_kb_uz.kb_address)
+        await sql_db.check_number_uz(message)
     elif message.text == '▶️Continue checkout':
-        await message.answer('Please send your location😊', reply_markup=client_kb_eng.kb_address)
+        await sql_db.check_number_eng(message)
 
 
 @dp.message_handler(text=['📤Отправить заказ', '📤Send order', '📤Buyurtmani yuboring'])
@@ -899,6 +905,24 @@ async def clear_cart(message: types.Message):
     elif message.text == "🌀 Savatni bo'shatish":
         await sql_db.delete_order(message)
         await message.answer('Arava bo‘sh, siz asosiy menyudasiz', reply_markup=client_kb_uz.kb_main)
+
+
+@dp.message_handler(text=['Отлично 🌟🌟🌟🌟🌟', 'Хорошо 🌟🌟🌟🌟', 'Нормально 🌟🌟🌟', 'Так себе 🌟🌟', 'Плохо, 🌟', 'Не хочу',
+                          'Ajoyib 🌟🌟🌟🌟🌟', 'Yaxshi 🌟🌟🌟🌟', 'Yoqdi 🌟🌟🌟', 'Boladi 🌟🌟', 'Yomon 🌟', 'Hohlamayman',
+                          'Excellent 🌟🌟🌟🌟🌟', 'Good 🌟🌟🌟🌟', 'Nice 🌟🌟🌟', 'So-so 🌟🌟', 'Bad 🌟', 'I do not want'])
+async def mark(message: types.Message):
+    await sql_db.star(message)
+    if message.text == 'Не хочу':
+        await message.answer('Хорошо, вернул вас в главное меню', reply_markup=client_kb_ru.kb_main)
+    elif message.text == 'Hohlamayman':
+        await message.answer('OK, sizni asosiy menyuga qaytardim', reply_markup=client_kb_uz.kb_main)
+    elif message.text == 'I do not want':
+        await message.answer('Okay, brought you back to the main menu', reply_markup=client_kb_eng.kb_main)
+
+
+@dp.message_handler()
+async def feedback(message: types.Message):
+    await sql_db.feedback(message)
 
 
 def register_handlers_client(disp: Dispatcher):

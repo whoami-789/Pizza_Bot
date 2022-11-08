@@ -25,6 +25,13 @@ clear = KeyboardButton('🌀 Clear the cart')
 user_data = KeyboardButton('My details')
 cancel = KeyboardButton('❗Cancel')
 
+mark_5 = KeyboardButton('Excellent 🌟🌟🌟🌟🌟')
+mark_4 = KeyboardButton('Good 🌟🌟🌟🌟')
+mark_3 = KeyboardButton('Nice 🌟🌟🌟')
+mark_2 = KeyboardButton('So-so 🌟🌟')
+mark_1 = KeyboardButton('Bad 🌟')
+mark_none = KeyboardButton('I do not want')
+
 margarita = KeyboardButton('Margarrita')
 chick = KeyboardButton('Chicken with mushrooms')
 cheeze = KeyboardButton('FOUR CHEESES')
@@ -38,7 +45,6 @@ veg = KeyboardButton('Vegetarian')
 tuna = KeyboardButton('Gourmet pizza with tuna')
 seafood = KeyboardButton('Seafood pizza')
 burger = KeyboardButton('Pizza Burger')
-
 
 pizasouse = KeyboardButton('Pizza sauce')
 ketchup = KeyboardButton('Ketchup')
@@ -55,12 +61,10 @@ nagets = KeyboardButton('Chicken nuggets')
 chkub = KeyboardButton('Cheese cubes')
 it_mesh = KeyboardButton('Italian mishmash')
 
-
 pepsi = KeyboardButton('Pepsi cola')
 water = KeyboardButton('Sparkling water')
 sok = KeyboardButton('Juices liter')
 fanta = KeyboardButton('Fannta')
-
 
 mini_margarita = KeyboardButton('Mini Margarrita')
 mini_chick = KeyboardButton('Mini Chicken with mushrooms')
@@ -124,6 +128,8 @@ kb_kafe = ReplyKeyboardMarkup(resize_keyboard=True)
 kb_mydata = ReplyKeyboardMarkup(resize_keyboard=True)
 kb_del_or_self = ReplyKeyboardMarkup(resize_keyboard=True)
 kb_cart = ReplyKeyboardMarkup(resize_keyboard=True)
+marks = ReplyKeyboardMarkup(resize_keyboard=True)
+dont_want = ReplyKeyboardMarkup(resize_keyboard=True)
 make_order = KeyboardButton("👍🏽Checkout")
 
 kb_main.add(order).row(myorders, user_data, feedback)
@@ -155,3 +161,7 @@ kb_address.add(location, send_order).row(main_menu)
 kb_kafe.row(kafe_1, kafe_2).row(main_menu, back_to_menu)
 
 kb_cart.row(make_order).row(clear, back_to_menu)
+
+marks.row(mark_none, mark_5, mark_4).row(mark_3, mark_2, mark_1)
+
+dont_want.add(mark_none)
