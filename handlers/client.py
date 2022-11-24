@@ -228,21 +228,20 @@ async def delete_cart(callback: types.CallbackQuery):
 
 # Пиццы ##########################################################################
 @dp.message_handler(text=['Вегетерианская', 'С тунцом', 'Маргарита', 'Курица с грибами', 'Шашлык', 'Четыре сыра',
-                          'Пепперони', 'Комбинированная', 'С морепродуктами', 'Селфи', 'Саламалейкум', 'Цезарь',
-                          'Пицца-Бургер'],
+                          'Пепперони', 'Комбинированная', 'С морепродуктами', 'Селфи', 'Саламалейкум', 'Цезарь'],
                     state=FSMPizza.name)
 async def command_veg_pizza(message: types.Message, state: FSMContext):
     await sql_db.sql_view_pizza(message)
-    await message.answer('Что-бы выбрать другую пиццу кликните по ее названию 2 раза☺')
     async with state.proxy() as data:
         data['name'] = message.text
     await FSMPizza.next()
     print(data)
+    await message.answer('Что-бы выбрать другую пиццу кликните по ее названию 2 раза☺')
 
 
 @dp.message_handler(text=['Margarita', "TOVUQ VA QO'ZIQORINLI", "To'rt xil PISHLOQ", 'Peperoni', 'Kombi', 'Selfi',
                           'Salomaleykum', 'Sezar', 'Vegetarianli', 'Tuna bilan ajoyib pizza', 'Dengiz mahsulotlari',
-                          'Shashlik', 'Pitsa-Burger'], state=FSMPizza.name)
+                          'Shashlik'], state=FSMPizza.name)
 async def command_veg_pizza_eng(message: types.Message, state: FSMContext):
     await sql_db.sql_view_pizza_uz(message)
     async with state.proxy() as data:
@@ -254,7 +253,7 @@ async def command_veg_pizza_eng(message: types.Message, state: FSMContext):
 
 @dp.message_handler(text=['Margarrita', 'Chicken with mushrooms', 'FOUR CHEESES', 'Kebab', 'Pepperoni',
                           'Combined', 'Selfie', 'Salamaleykum', 'Cesar', 'Vegetarian', 'Gourmet pizza with tuna',
-                          'Seafood pizza', 'Pizza Burger'], state=FSMPizza.name)
+                          'Seafood pizza'], state=FSMPizza.name)
 async def command_veg_pizza_uz(message: types.Message, state: FSMContext):
     await sql_db.sql_view_pizza_eng(message)
     async with state.proxy() as data:
@@ -262,6 +261,19 @@ async def command_veg_pizza_uz(message: types.Message, state: FSMContext):
     await FSMPizza.next()
     print(data)
     await message.answer('To select another pizza, double-click on its name☺')
+
+
+@dp.message_handler(text=['Пицца-Бургер', 'Pitsa-Burger', 'Pizza Burger'], state=FSMPizza.name)
+async def pizza_burger(message: types.Message, state: FSMContext):
+    if message.text == 'Пицца-Бургер':
+        await sql_db.pizza_burger(message)
+    elif message.text == 'Pitsa-Burger':
+        await sql_db.pizza_burger_uz(message)
+    elif message.text == 'Pizza Burger':
+        await sql_db.pizza_burger_eng(message)
+    async with state.proxy() as data:
+        data['name'] = message.text
+    await FSMPizza.next()
 
 
 # Салаты ##########################################################################
@@ -589,12 +601,14 @@ async def change_name(message: types.Message, state: FSMContext):
 
 
 @dp.callback_query_handler(
-    text=['32', '36', '38', '32_eng', '36_eng', '38_eng', '32_uz', '36_uz', '38_uz', '1', '0.5', '1_eng', '0.5_eng',
-          '1_uz', '0.5_uz'],
+    text=['32', '32_b', '36', '38', '32_eng', '32_eng_b', '36_eng', '38_eng', '32_uz', '32_uz_b', '36_uz', '38_uz', '1',
+          '0.5', '1_eng', '0.5_eng',
+          '1_uz', '0.5_uz', '20', '20_uz', '20_eng'],
     state='*')
 @dp.callback_query_handler(
-    text=['32', '36', '38', '32_eng', '36_eng', '38_eng', '32_uz', '36_uz', '38_uz', '1', '0.5', '1_eng', '0.5_eng',
-          '1_uz', '0.5_uz'],
+    text=['32', '32_b', '36', '38', '32_eng', '32_eng_b', '36_eng', '38_eng', '32_uz', '32_uz_b', '36_uz', '38_uz', '1',
+          '0.5', '1_eng', '0.5_eng',
+          '1_uz', '0.5_uz', '20', '20_uz', '20_eng'],
     state=FSMPizza.size)
 async def command_size(callback: types.CallbackQuery, state: FSMContext):
     if callback.data in '32':
@@ -667,6 +681,49 @@ async def command_size(callback: types.CallbackQuery, state: FSMContext):
         await FSMPizza.size.set()
         async with state.proxy() as data:
             data['size'] = 38
+        await FSMPizza.next()
+
+    elif callback.data in '32_b':
+        await callback.message.edit_reply_markup(reply_markup=client_kb_ru.inline_kb_pizza_burger_32)
+        await state.reset_state(False)
+        await FSMPizza.size.set()
+        async with state.proxy() as data:
+            data['size'] = 32
+        await FSMPizza.next()
+    elif callback.data in '32_eng_b':
+        await callback.message.edit_reply_markup(reply_markup=client_kb_eng.inline_kb_pizza_burger_32)
+        await state.reset_state(False)
+        await FSMPizza.size.set()
+        async with state.proxy() as data:
+            data['size'] = 32
+        await FSMPizza.next()
+    elif callback.data in '32_uz_b':
+        await callback.message.edit_reply_markup(reply_markup=client_kb_uz.inline_kb_pizza_burger_32)
+        await state.reset_state(False)
+        await FSMPizza.size.set()
+        async with state.proxy() as data:
+            data['size'] = 32
+        await FSMPizza.next()
+    elif callback.data in '20':
+        await callback.message.edit_reply_markup(reply_markup=client_kb_ru.inline_kb_pizza_burger_20)
+        await state.reset_state(False)
+        await FSMPizza.size.set()
+        async with state.proxy() as data:
+            data['size'] = 20
+        await FSMPizza.next()
+    elif callback.data in '20_eng':
+        await callback.message.edit_reply_markup(reply_markup=client_kb_eng.inline_kb_pizza_burger_20)
+        await state.reset_state(False)
+        await FSMPizza.size.set()
+        async with state.proxy() as data:
+            data['size'] = 20
+        await FSMPizza.next()
+    elif callback.data in '20_uz':
+        await callback.message.edit_reply_markup(reply_markup=client_kb_uz.inline_kb_pizza_burger_20)
+        await state.reset_state(False)
+        await FSMPizza.size.set()
+        async with state.proxy() as data:
+            data['size'] = 20
         await FSMPizza.next()
 
     if callback.data in '1':
@@ -785,23 +842,24 @@ async def show_back_button(message: types.Message):
     await sql_db.save_user_phone(message)
 
 
-@dp.message_handler(text=['Яккасарайский р-он, ул. Шарафа Рашидова 40В', 'Сергелийский р-он, ул. Обихаёт 3',
-                          'Yakkasaray district, Sharaf Rashidov st. 40V', 'Sergeli district, Environment st. 3',
-                          'Yakkasaroy, Sharafa Rashidov koch. 40V', 'Sergeli, Atrof-muhit koch. 3'])
+@dp.message_handler(text=['Яккасарайский р-он, ул. Шарафа Рашидова 40В', 'Сергелийский р-он, ул. Обихаёт 3'])
 async def self_delivery(message: types.Message):
     await sql_db.self_del(message)
-    await sql_db.send_order(message)
-    if message.text == ['Яккасарайский р-он, ул. Шарафа Рашидова 40В', 'Сергелийский р-он, ул. Обихаёт 3']:
-        await message.answer('Ожидайте звонка оператора')
-        await message.answer('Вы в главном меню', reply_markup=client_kb_ru.kb_main)
+    await sql_db.send_order_self(message)
 
-    elif message.text == ['Yakkasaray district, Sharaf Rashidov st. 40V', 'Sergeli district, Environment st. 3']:
-        await message.answer("Wait for the operator's call")
-        await message.answer('You are in the main menu', reply_markup=client_kb_eng.kb_menu)
 
-    elif message.text == ['Yakkasaroy, Sharafa Rashidov koch. 40V', 'Sergeli, Atrof-muhit koch. 3']:
-        await message.answer("Operator qo'ng'irog'ini kuting")
-        await message.answer('Siz asosiy menyudasiz', reply_markup=client_kb_uz.kb_menu)
+@dp.message_handler(text=[
+    'Yakkasaroy, Sharafa Rashidov koch. 40V', 'Sergeli, Atrof-muhit koch. 3'])
+async def self_delivery(message: types.Message):
+    await sql_db.self_del(message)
+    await sql_db.send_order_self_uz(message)
+
+
+@dp.message_handler(text=[
+    'Yakkasaray district, Sharaf Rashidov st. 40V', 'Sergeli district, Environment st. 3'])
+async def self_delivery(message: types.Message):
+    await sql_db.self_del(message)
+    await sql_db.send_order_self_eng(message)
 
 
 @dp.message_handler(text=['🏢Самовывоз', '🏢Pickup', '🏢Termoq'])

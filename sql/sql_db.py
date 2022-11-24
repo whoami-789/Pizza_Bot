@@ -109,8 +109,37 @@ async def sql_view_pizza_uz(message):
                              reply_markup=client_kb_uz.inline_kb_pizza)
 
 
-async def sql_pizza_name(message):
-    cur.execute("select name from menu where name like ?", (message.text,))
+async def pizza_burger(message):
+    a = cur.execute("select price from menu where idc=1 and name like ? and psize=20", ('Пицца-Бургер',)).fetchone()
+    for ret in cur.execute(
+            "SELECT img, name, description, price FROM menu where idc=1 and name like ? and psize=32",
+            ('Пицца-Бургер',)).fetchall():
+        await bot.send_photo(message.from_user.id, ret[0], f'{ret[1]}\n\n{ret[2]}\n\nЦены\n '
+                                                           f'32 см {ret[3]} сум\n'
+                                                           f'20 см {a[0]} сум\n',
+                             reply_markup=client_kb_ru.inline_kb_pizza_burger)
+
+
+async def pizza_burger_uz(message):
+    a = cur.execute("select price from menu where idc=1 and name like ? and psize=20", ('Pitsa-Burger',)).fetchone()
+    for ret in cur.execute(
+            "SELECT img, name, description, price FROM menu where idc=1 and name like ? and psize=32",
+            ('Pitsa-Burger',)).fetchall():
+        await bot.send_photo(message.from_user.id, ret[0], f'{ret[1]}\n\n{ret[2]}\n\nЦены\n '
+                                                           f'32 см {ret[3]} сум\n'
+                                                           f'20 см {a[0]} сум\n',
+                             reply_markup=client_kb_uz.inline_kb_pizza_burger)
+
+
+async def pizza_burger_eng(message):
+    a = cur.execute("select price from menu where idc=1 and name like ? and psize=20", ('Pizza Burger',)).fetchone()
+    for ret in cur.execute(
+            "SELECT img, name, description, price FROM menu where idc=1 and name like ? and psize=32",
+            ('Pizza Burger',)).fetchall():
+        await bot.send_photo(message.from_user.id, ret[0], f'{ret[1]}\n\n{ret[2]}\n\nЦены\n '
+                                                           f'32 см {ret[3]} сум\n'
+                                                           f'20 см {a[0]} сум\n',
+                             reply_markup=client_kb_eng.inline_kb_pizza_burger)
 
 
 # Отображение салатов ################################################################################################
@@ -342,7 +371,7 @@ async def delivery_location(message):
 
 
 async def self_del(message):
-    cur.execute('update orders set address=? where idu=? and dateC=date() and received=0',
+    cur.execute('update orders set address=? where idu=? and dateC=date() and received=0 and send =0',
                 (message.text, message.chat.id,))
     base.commit()
 
@@ -388,8 +417,13 @@ async def show_cart(message):
     for a in cur.execute('select sum(menu.price*amount) from cart, menu where ido=(select id from orders '
                          'where dateC=date() and idu=? and received=0) and menu.id=cart.idm',
                          (message.chat.id,)).fetchone():
-        await bot.send_message(message.from_user.id, f'Полная стоимость заказа: {a} сум',
-                               reply_markup=client_kb_ru.kb_cart)
+        if a is None:
+            await bot.send_message(message.from_user.id,
+                                   f'Корзина пуста, вернитесь пожалуйста в меню и выберите что хотите заказать)',
+                                   reply_markup=client_kb_ru.kb_back_to_menu)
+        else:
+            await bot.send_message(message.from_user.id, f'Полная стоимость заказа: {a} сум',
+                                   reply_markup=client_kb_ru.kb_cart)
 
 
 async def show_cart_uz(message):
@@ -406,8 +440,13 @@ async def show_cart_uz(message):
     for a in cur.execute('select sum(menu.price*amount) from cart, menu where ido=(select id from orders '
                          'where dateC=date() and idu=? and received=0) and menu.id=cart.idm',
                          (message.chat.id,)).fetchone():
-        await bot.send_message(message.from_user.id, f'Buyurtmaning umumiy qiymati: {a} sum',
-                               reply_markup=client_kb_uz.kb_cart)
+        if a is None:
+            await bot.send_message(message.from_user.id,
+                                   f"Savat bo'sh, iltimos, menyuga qayting va buyurtma berishni xohlagan narsani tanlang)",
+                                   reply_markup=client_kb_uz.kb_back_to_menu)
+        else:
+            await bot.send_message(message.from_user.id, f'Buyurtmaning umumiy qiymati: {a} sum',
+                                   reply_markup=client_kb_uz.kb_cart)
 
 
 async def show_cart_eng(message):
@@ -424,8 +463,13 @@ async def show_cart_eng(message):
     for a in cur.execute('select sum(menu.price*amount) from cart, menu where ido=(select id from orders '
                          'where dateC=date() and idu=? and received=0) and menu.id=cart.idm',
                          (message.chat.id,)).fetchone():
-        await bot.send_message(message.from_user.id, f'Total cost of the order: {a} sum',
-                               reply_markup=client_kb_eng.kb_cart)
+        if a is None:
+            await bot.send_message(message.from_user.id,
+                                   f'Cart is empty, please return to the menu and select what you want to order)',
+                                   reply_markup=client_kb_eng.kb_back_to_menu)
+        else:
+            await bot.send_message(message.from_user.id, f'Total cost of the order: {a} sum',
+                                   reply_markup=client_kb_eng.kb_cart)
 
 
 async def send_order(message):
@@ -434,21 +478,96 @@ async def send_order(message):
     for ret in cur.execute('select orders.longtitude, orders.latitude, user.pnumber, user.first_name from orders '
                            'inner join user on user.chat_id = orders.idu where dateC=date() and idu=? and received=0 '
                            'and send=1', (message.chat.id,)):
-        await bot.send_location(596927092, ret[1], ret[0])
-        await bot.send_message(596927092, f'{ret[3]}\n {ret[2]}')
+        await bot.send_location(-888675536, ret[1], ret[0])
+        await bot.send_message(-888675536, f'{ret[3]}\n +{ret[2]}')
     for ret in cur.execute(
             'select orders.id, menu.name, menu.psize, menu.price, cart.amount from orders '
             'inner join cart on orders.id = cart.ido '
             'inner join menu on menu.id = cart.idm '
             'inner join user on orders.idu = user.chat_id where chat_id=? and orders.dateC=date() and orders.received=0 and send=1'
             , (message.chat.id,)).fetchall():
-        await bot.send_message(596927092,
+        await bot.send_message(-888675536,
                                f'Номер заказа: {ret[0]}\n{ret[1]} {ret[2]} см\nЦена: {ret[3] * ret[4]} сум\nКолличество: {ret[4]}',
                                reply_markup=admin_kb.inline_kb_recive)
     for a in cur.execute('select sum(menu.price*amount) from cart, menu where ido=(select id from orders '
                          'where dateC=date() and idu=? and received=0 and send=1) and menu.id=cart.idm',
                          (message.chat.id,)).fetchone():
-        await bot.send_message(596927092, f'Полная стоимость заказа: {a} сум')
+        await bot.send_message(-888675536, f'Полная стоимость заказа: {a} сум')
+
+
+async def send_order_self(message):
+    await message.answer('Ожидайте звонка оператора')
+    await message.answer('Вы в главном меню', reply_markup=client_kb_ru.kb_main)
+    cur.execute('update orders set send=? where dateC=date() and idu=?', (1, message.chat.id,))
+    base.commit()
+    for ret in cur.execute('select orders.address, user.pnumber, user.first_name from orders '
+                           'inner join user on user.chat_id = orders.idu where dateC=date() and idu=? and received=0 '
+                           'and send=1', (message.chat.id,)):
+        await bot.send_message(-888675536, f'{ret[0]}\n{ret[2]}\n +{ret[1]}')
+    for ret in cur.execute(
+            'select orders.id, menu.name, menu.psize, menu.price, cart.amount from orders '
+            'inner join cart on orders.id = cart.ido '
+            'inner join menu on menu.id = cart.idm '
+            'inner join user on orders.idu = user.chat_id where chat_id=? and orders.dateC=date() and orders.received=0 and send=1'
+            , (message.chat.id,)).fetchall():
+        await bot.send_message(-888675536,
+                               f'Номер заказа: {ret[0]}\n{ret[1]} {ret[2]} см\nЦена: {ret[3] * ret[4]} сум\nКолличество: {ret[4]}',
+                               reply_markup=admin_kb.inline_kb_recive)
+    for a in cur.execute('select sum(menu.price*amount) from cart, menu where ido=(select id from orders '
+                         'where dateC=date() and idu=? and received=0 and send=1) and menu.id=cart.idm',
+                         (message.chat.id,)).fetchone():
+        await bot.send_message(-888675536, f'Полная стоимость заказа: {a} сум')
+
+
+
+async def send_order_self_uz(message):
+    await message.answer("Operator qo'ng'irog'ini kuting")
+    await message.answer('Siz asosiy menyudasiz', reply_markup=client_kb_uz.kb_main)
+    cur.execute('update orders set send=? where dateC=date() and idu=?', (1, message.chat.id,))
+    base.commit()
+    for ret in cur.execute('select orders.address, user.pnumber, user.first_name from orders '
+                           'inner join user on user.chat_id = orders.idu where dateC=date() and idu=? and received=0 '
+                           'and send=1', (message.chat.id,)):
+        await bot.send_message(-888675536, f'{ret[0]}\n{ret[2]}\n +{ret[1]}')
+    for ret in cur.execute(
+            'select orders.id, menu.name, menu.psize, menu.price, cart.amount from orders '
+            'inner join cart on orders.id = cart.ido '
+            'inner join menu on menu.id = cart.idm '
+            'inner join user on orders.idu = user.chat_id where chat_id=? and orders.dateC=date() and orders.received=0 and send=1'
+            , (message.chat.id,)).fetchall():
+        await bot.send_message(-888675536,
+                               f'Номер заказа: {ret[0]}\n{ret[1]} {ret[2]} см\nЦена: {ret[3] * ret[4]} сум\nКолличество: {ret[4]}',
+                               reply_markup=admin_kb.inline_kb_recive)
+    for a in cur.execute('select sum(menu.price*amount) from cart, menu where ido=(select id from orders '
+                         'where dateC=date() and idu=? and received=0 and send=1) and menu.id=cart.idm',
+                         (message.chat.id,)).fetchone():
+        await bot.send_message(-888675536, f'Полная стоимость заказа: {a} сум')
+
+
+
+async def send_order_self_eng(message):
+    await message.answer("Wait for the operator's call")
+    await message.answer('You are in the main menu', reply_markup=client_kb_eng.kb_main)
+    cur.execute('update orders set send=? where dateC=date() and idu=?', (1, message.chat.id,))
+    base.commit()
+    for ret in cur.execute('select orders.address, user.pnumber, user.first_name from orders '
+                           'inner join user on user.chat_id = orders.idu where dateC=date() and idu=? and received=0 '
+                           'and send=1', (message.chat.id,)):
+        await bot.send_message(-888675536, f'{ret[0]}\n{ret[2]}\n +{ret[1]}')
+    for ret in cur.execute(
+            'select orders.id, menu.name, menu.psize, menu.price, cart.amount from orders '
+            'inner join cart on orders.id = cart.ido '
+            'inner join menu on menu.id = cart.idm '
+            'inner join user on orders.idu = user.chat_id where chat_id=? and orders.dateC=date() and orders.received=0 and send=1'
+            , (message.chat.id,)).fetchall():
+        await bot.send_message(-888675536,
+                               f'Номер заказа: {ret[0]}\n{ret[1]} {ret[2]} см\nЦена: {ret[3] * ret[4]} сум\nКолличество: {ret[4]}',
+                               reply_markup=admin_kb.inline_kb_recive)
+    for a in cur.execute('select sum(menu.price*amount) from cart, menu where ido=(select id from orders '
+                         'where dateC=date() and idu=? and received=0 and send=1) and menu.id=cart.idm',
+                         (message.chat.id,)).fetchone():
+        await bot.send_message(-888675536, f'Полная стоимость заказа: {a} сум')
+
 
 
 async def my_orders(message):
@@ -741,7 +860,7 @@ async def check_number(message):
             await message.answer(
                 'Пожалуйста нажмите на кнопку "📱Отправить номер телефона", без номера телефона заказ невозможен')
         else:
-            await message.answer('Отправьте пожалуйста ваше местоположение😊', reply_markup=client_kb_ru.kb_address)
+            await message.answer('Доставить или заберете сами?😊', reply_markup=client_kb_ru.kb_del_or_self)
 
 
 async def check_number_uz(message):
@@ -750,7 +869,8 @@ async def check_number_uz(message):
             await message.answer(
                 'Iltimos, "📱 Telefon raqamini yuborish" tugmasini bosing, telefon raqamisiz buyurtma berish mumkin emas')
         else:
-            await message.answer('Iltimos, manzilingizni yuboring😊', reply_markup=client_kb_uz.kb_address)
+            await message.answer('Доставить или заберете сами?😊', reply_markup=client_kb_uz.kb_del_or_self)
+
 
 
 async def check_number_eng(message):
@@ -759,24 +879,11 @@ async def check_number_eng(message):
             await message.answer(
                 'Please click on the button "📱 Send phone number", without a phone number the order is not possible')
         else:
-            await message.answer('Please send your location😊', reply_markup=client_kb_eng.kb_address)
+            await message.answer('Доставить или заберете сами?😊', reply_markup=client_kb_eng.kb_del_or_self)
+
 
 
 async def star(message):
-    cur.execute('update orders set star=? where idu=? and received=1 and send=1 and dateC=date()'
-                , (message.text, message.chat.id,))
-    base.commit()
-    for b in cur.execute('select lang from user '
-                         'where chat_id=?', (message.chat.id,)).fetchone():
-        if b == 'ru':
-            await message.answer('Напишите подробный отзыв, если хотите', reply_markup=client_kb_ru.dont_want)
-        elif b == 'uz':
-            await message.answer('Agar xohlasangiz, batafsil sharh yozing)', reply_markup=client_kb_uz.dont_want)
-        elif b == 'eng':
-            await message.answer('Write a detailed review if you want)', reply_markup=client_kb_eng.dont_want)
-
-
-async def feedback(message):
     cur.execute('update orders set star=? where idu=? and received=1 and send=1 and dateC=date()'
                 , (message.text, message.chat.id,))
     base.commit()
@@ -795,7 +902,7 @@ async def feedback(message):
     for ret in cur.execute('select id, star, feedback, first_name, pnumber from main.orders'
                            ' inner join user on chat_id = orders.idu where idu=? and received=1 and send=1 and dateC=date()'
             , (message.chat.id,)):
-        await bot.send_message(596927092, f'Пришел отзыв!!!\n {ret[1]}\n {ret[2]}\n {ret[3]}\n {ret[4]}')
+        await bot.send_message(-888675536, f'Пришел отзыв!!!\n {ret[1]}\n {ret[2]}\n {ret[3]}\n+{ret[4]}')
 
 
 async def amount():
