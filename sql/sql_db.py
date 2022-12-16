@@ -1,10 +1,11 @@
 import asyncio
 import sqlite3 as sq
 
+from aiogram.utils.exceptions import BotBlocked
+from googletrans import Translator
 import requests
 
 from create_bot import bot
-from handlers import client
 from keyboards import client_kb_ru, admin_kb, client_kb_eng, client_kb_uz
 
 
@@ -473,26 +474,49 @@ async def show_cart_eng(message):
 
 
 async def send_order(message):
-    cur.execute('update orders set send=? where dateC=date() and idu=?', (1, message.chat.id,))
-    base.commit()
-    for ret in cur.execute('select orders.longtitude, orders.latitude, user.pnumber, user.first_name from orders '
-                           'inner join user on user.chat_id = orders.idu where dateC=date() and idu=? and received=0 '
-                           'and send=1', (message.chat.id,)):
-        await bot.send_location(-888675536, ret[1], ret[0])
-        await bot.send_message(-888675536, f'{ret[3]}\n +{ret[2]}')
-    for ret in cur.execute(
-            'select orders.id, menu.name, menu.psize, menu.price, cart.amount from orders '
-            'inner join cart on orders.id = cart.ido '
-            'inner join menu on menu.id = cart.idm '
-            'inner join user on orders.idu = user.chat_id where chat_id=? and orders.dateC=date() and orders.received=0 and send=1'
-            , (message.chat.id,)).fetchall():
-        await bot.send_message(-888675536,
-                               f'Номер заказа: {ret[0]}\n{ret[1]} {ret[2]} см\nЦена: {ret[3] * ret[4]} сум\nКолличество: {ret[4]}',
-                               reply_markup=admin_kb.inline_kb_recive)
-    for a in cur.execute('select sum(menu.price*amount) from cart, menu where ido=(select id from orders '
-                         'where dateC=date() and idu=? and received=0 and send=1) and menu.id=cart.idm',
+    for i in cur.execute('select longtitude from orders where idu=? and dateC=date() and received=0 and send=0',
                          (message.chat.id,)).fetchone():
-        await bot.send_message(-888675536, f'Полная стоимость заказа: {a} сум')
+        if i == '0':
+            for b in cur.execute('select lang from user where chat_id=?', (message.chat.id,)).fetchone():
+                if b == 'ru':
+                    await message.answer(
+                        'Нажмите на кнопку отправть местоположение пожалуйста(без этого заказ невозможен)🧐')
+                elif b == 'uz':
+                    await message.answer(
+                        "Iltimos, manzilni yuboring tugmasini bosing (busiz buyurtma berish mumkin emas)🧐")
+                elif b == 'eng':
+                    await message.answer(
+                        'Click on the button send the location please (without this, the order is impossible)🧐')
+        else:
+            if message.text == '📤Отправить заказ':
+                await message.answer('Спасибо за заказ, ожидайте звонка оператора😊', reply_markup=client_kb_ru.kb_main)
+            elif message.text == '📤Buyurtmani yuboring':
+                await message.answer("Buyurtma uchun rahmat, operatordan qo'ng'iroqni kuting😊",
+                                     reply_markup=client_kb_uz.kb_main)
+            elif message.text == '📤Send order':
+                await message.answer('Thank you for the order, wait for a call from the operator😊',
+                                     reply_markup=client_kb_eng.kb_main)
+            cur.execute('update orders set send=? where dateC=date() and idu=?', (1, message.chat.id,))
+            base.commit()
+            for ret in cur.execute(
+                    'select orders.longtitude, orders.latitude, user.pnumber, user.first_name from orders '
+                    'inner join user on user.chat_id = orders.idu where dateC=date() and idu=? and received=0 '
+                    'and send=1', (message.chat.id,)):
+                await bot.send_location(-888675536, ret[1], ret[0])
+                await bot.send_message(-888675536, f'{ret[3]}\n +{ret[2]}')
+            for ret in cur.execute(
+                    'select orders.id, menu.name, menu.psize, menu.price, cart.amount from orders '
+                    'inner join cart on orders.id = cart.ido '
+                    'inner join menu on menu.id = cart.idm '
+                    'inner join user on orders.idu = user.chat_id where chat_id=? and orders.dateC=date() and orders.received=0 and send=1'
+                    , (message.chat.id,)).fetchall():
+                await bot.send_message(-888675536,
+                                       f'Номер заказа: {ret[0]}\n{ret[1]} {ret[2]} см\nЦена: {ret[3] * ret[4]} сум\nКолличество: {ret[4]}',
+                                       reply_markup=admin_kb.inline_kb_recive)
+            for a in cur.execute('select sum(menu.price*amount) from cart, menu where ido=(select id from orders '
+                                 'where dateC=date() and idu=? and received=0 and send=1) and menu.id=cart.idm',
+                                 (message.chat.id,)).fetchone():
+                await bot.send_message(-888675536, f'Полная стоимость заказа: {a} сум')
 
 
 async def send_order_self(message):
@@ -519,7 +543,6 @@ async def send_order_self(message):
         await bot.send_message(-888675536, f'Полная стоимость заказа: {a} сум')
 
 
-
 async def send_order_self_uz(message):
     await message.answer("Operator qo'ng'irog'ini kuting")
     await message.answer('Siz asosiy menyudasiz', reply_markup=client_kb_uz.kb_main)
@@ -544,7 +567,6 @@ async def send_order_self_uz(message):
         await bot.send_message(-888675536, f'Полная стоимость заказа: {a} сум')
 
 
-
 async def send_order_self_eng(message):
     await message.answer("Wait for the operator's call")
     await message.answer('You are in the main menu', reply_markup=client_kb_eng.kb_main)
@@ -567,7 +589,6 @@ async def send_order_self_eng(message):
                          'where dateC=date() and idu=? and received=0 and send=1) and menu.id=cart.idm',
                          (message.chat.id,)).fetchone():
         await bot.send_message(-888675536, f'Полная стоимость заказа: {a} сум')
-
 
 
 async def my_orders(message):
@@ -872,7 +893,6 @@ async def check_number_uz(message):
             await message.answer('Доставить или заберете сами?😊', reply_markup=client_kb_uz.kb_del_or_self)
 
 
-
 async def check_number_eng(message):
     for i in cur.execute('select pnumber from user where chat_id=?', (message.chat.id,)).fetchone():
         if i == '0':
@@ -881,6 +901,10 @@ async def check_number_eng(message):
         else:
             await message.answer('Доставить или заберете сами?😊', reply_markup=client_kb_eng.kb_del_or_self)
 
+
+async def continue_order(message):
+    cur.execute('update orders set longtitude=?, latitude=? where dateC=date() and idu=?', ('0', '0', message.chat.id,))
+    base.commit()
 
 
 async def star(message):
@@ -910,3 +934,26 @@ async def amount():
     cur.execute('select amount from cart where idm=(select id from menu where '
                 '((name=? or name=?) and (psize=? or psize=?)) or (name=? or name=?) and ido=?)',
                 (a[3], a[3] + ' ' + a[4], a[4], a[5], a[3], a[3] + ' ' + a[4], a[2],)).fetchone()
+
+
+gt = Translator()
+
+
+async def send_mail(state):
+    try:
+        async with state.proxy() as data:
+            for a in cur.execute('select chat_id, lang from user').fetchall():
+                if a[1] == 'ru':
+                    await bot.send_photo(a[0], tuple(data.values())[0],
+                                         tuple(data.values())[1] + '\n Для перехода в главное меню нажмите /main')
+                elif a[1] == 'uz':
+                    await bot.send_photo(a[0], tuple(data.values())[0], (gt.translate(
+                        tuple(data.values())[1] + "\n Для перехода в главное меню нажмите ", src='ru',
+                        dest='uz').text) + " " + '/asosiy_menu')
+                elif a[1] == 'eng':
+                    await bot.send_photo(a[0], tuple(data.values())[0], (gt.translate(
+                        tuple(data.values())[1] + '\n Для перехода в главное меню нажмите',
+                        src='ru').text) + " " + '/main_menu')
+    except BotBlocked as b:
+        if b.match == "bot was blocked by the user":
+            print("Bot blocked")

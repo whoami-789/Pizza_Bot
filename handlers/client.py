@@ -169,6 +169,24 @@ async def command_main_menu(message: types.Message):
         await message.answer('Siz asosiy menyudasiz', reply_markup=client_kb_uz.kb_main)
 
 
+@dp.message_handler(commands=['main'])
+async def comm_main(message: types.Message):
+    await sql_db.delete_order(message)
+    await message.answer('Вы в главном меню', reply_markup=client_kb_ru.kb_main)
+
+
+@dp.message_handler(commands=['main_menu'])
+async def comm_main(message: types.Message):
+    await sql_db.delete_order(message)
+    await message.answer('You are in the main menu', reply_markup=client_kb_eng.kb_main)
+
+
+@dp.message_handler(commands=['asosiy_menu'])
+async def comm_main(message: types.Message):
+    await sql_db.delete_order(message)
+    await message.answer('Siz asosiy menyudasiz', reply_markup=client_kb_uz.kb_main)
+
+
 @dp.message_handler(text=['📞 Обратная связь', '📞 Feedback', '📞 Qayta aloqa'])
 async def command_phone(message: types.Message):
     if message.text == '📞 Обратная связь':
@@ -830,11 +848,14 @@ async def make_order(message: types.Message):
 @dp.message_handler(text=['🚗Доставка', '🚗Delivery', '🚗Yetkazib berish'])
 async def delivery(message: types.Message):
     if message.text == '🚗Доставка':
-        await message.answer('Куда доставить?🧐', reply_markup=client_kb_ru.kb_address)
+        await message.answer('Нажмите на кнопку отправть местоположение пожалуйста(без этого заказ невозможен)🧐',
+                             reply_markup=client_kb_ru.kb_address)
     elif message.text == '🚗Delivery':
-        await message.answer('Where to deliver?🧐', reply_markup=client_kb_eng.kb_address)
+        await message.answer('Click on the send location button please (without this, the order is not possible)🧐',
+                             reply_markup=client_kb_eng.kb_address)
     elif message.text == '🚗Yetkazib berish':
-        await message.answer('Qaerga yetkazib berish?🧐', reply_markup=client_kb_uz.kb_address)
+        await message.answer('Iltimos, joylashuvni yuborish tugmasini bosing (busiz buyurtma berish mumkin emas)🧐',
+                             reply_markup=client_kb_uz.kb_address)
 
 
 @dp.message_handler(content_types=['contact'])
@@ -900,23 +921,18 @@ async def cancel(message: types.Message):
 @dp.message_handler(text=['▶️Продолжить оформление заказа', '▶️Continue checkout', '▶️Buyurtmani davom eting'])
 async def continue_order(message: types.Message):
     if message.text == '▶️Продолжить оформление заказа':
+        await sql_db.continue_order(message)
         await sql_db.check_number(message)
     elif message.text == '▶️Buyurtmani davom eting':
+        await sql_db.continue_order(message)
         await sql_db.check_number_uz(message)
     elif message.text == '▶️Continue checkout':
+        await sql_db.continue_order(message)
         await sql_db.check_number_eng(message)
 
 
 @dp.message_handler(text=['📤Отправить заказ', '📤Send order', '📤Buyurtmani yuboring'])
 async def send_full_order(message: types.Message):
-    if message.text == '📤Отправить заказ':
-        await message.answer('Спасибо за заказ, ожидайте звонка оператора😊', reply_markup=client_kb_ru.kb_main)
-    elif message.text == '📤Buyurtmani yuboring':
-        await message.answer("Buyurtma uchun rahmat, operatordan qo'ng'iroqni kuting😊",
-                             reply_markup=client_kb_uz.kb_main)
-    elif message.text == '📤Send order':
-        await message.answer('Thank you for the order, wait for a call from the operator😊',
-                             reply_markup=client_kb_eng.kb_main)
     await sql_db.send_order(message)
 
 
@@ -976,11 +992,6 @@ async def mark(message: types.Message):
         await message.answer('OK, sizni asosiy menyuga qaytardim', reply_markup=client_kb_uz.kb_main)
     elif message.text == 'I do not want':
         await message.answer('Okay, brought you back to the main menu', reply_markup=client_kb_eng.kb_main)
-
-
-@dp.message_handler()
-async def feedback(message: types.Message):
-    await sql_db.feedback(message)
 
 
 def register_handlers_client(disp: Dispatcher):

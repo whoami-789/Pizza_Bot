@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="pizza" uuid="3c01d2e3-5a86-400c-839b-444569aa42c9">
+    <data-source source="LOCAL" name="pizza" uuid="e77b133a-5bf3-47cd-938f-82d95d23b02a">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
@@ -16,27 +16,12 @@
         </library>
       </libraries>
     </data-source>
-    <data-source source="LOCAL" name="pizza (2).db" uuid="74864c5d-fb52-44c7-b22f-f1b82fefe184">
+    <data-source source="LOCAL" name="a" uuid="c5e56872-6d6c-4b14-87ce-778f86897c87">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:$USER_HOME$/Downloads/pizza (2).db</jdbc-url>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/../pizza.db</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
-    </data-source>
-    <data-source source="LOCAL" name="pizza [2]" uuid="004ea87b-6d27-455a-a358-dc201dbf647b">
-      <driver-ref>sqlite.xerial</driver-ref>
-      <synchronize>true</synchronize>
-      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:C:\Users\tudya\Downloads\8597ec41260792e628f68ed7e24c98e0\8597ec41260792e628f68ed7e24c98e0\selfie_pizza_bot\pizza.db</jdbc-url>
-      <working-dir>$ProjectFileDir$</working-dir>
-      <libraries>
-        <library>
-          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.39.2/sqlite-jdbc-3.39.2.jar</url>
-        </library>
-        <library>
-          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.39.2/sqlite-jdbc-3.39.2.jar</url>
-        </library>
-      </libraries>
     </data-source>
   </component>
 </project>

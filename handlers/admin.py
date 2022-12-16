@@ -18,6 +18,36 @@ async def make_changes_command(message: types.Message):
     await message.delete()
 
 
+class FSMMail(StatesGroup):
+    photo = State()
+    mail = State()
+
+
+@dp.message_handler(commands='mailing', state=None)
+async def mail_all(message: types.Message):
+    await FSMMail.photo.set()
+    await message.reply('Загрузи фото', reply_markup=None)
+
+
+@dp.message_handler(content_types=['photo'], state=FSMMail.photo)
+async def load_photo(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['photo'] = message.photo[0].file_id
+    await FSMMail.next()
+    await message.reply("Введи текст", reply_markup=None)
+
+
+@dp.message_handler(state=FSMMail.mail)
+async def load_price(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['mail'] = message.text
+
+    print(data)
+    await sql_db.send_mail(state)
+    await state.finish()
+    await message.answer('Рассылка отправлена пользователям', reply_markup=client_kb_ru.main_menu)
+
+
 @dp.callback_query_handler(text='Принять заказ')
 async def command_size(callback: types.CallbackQuery):
     await sql_db.tip(callback)
