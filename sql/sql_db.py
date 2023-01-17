@@ -1,7 +1,8 @@
 import asyncio
 import sqlite3 as sq
 
-from aiogram.utils.exceptions import BotBlocked
+import aioschedule
+from aiogram.utils.exceptions import BotBlocked, UserDeactivated, ChatNotFound, MessageNotModified
 from googletrans import Translator
 import requests
 
@@ -940,20 +941,47 @@ gt = Translator()
 
 
 async def send_mail(state):
-    try:
-        async with state.proxy() as data:
-            for a in cur.execute('select chat_id, lang from user').fetchall():
+    async with state.proxy() as data:
+        eng = gt.translate(
+            tuple(data.values())[1] + '\n Для перехода в главное меню нажмите',
+            src='ru').text + " " + '/main_menu'
+        uz = gt.translate(
+            tuple(data.values())[1] + "\n Для перехода в главное меню нажмите ", src='ru',
+            dest='uz').text + " " + '/asosiy_menu'
+        ru = tuple(data.values())[1] + '\n Для перехода в главное меню нажмите /main'
+        for a in cur.execute('select chat_id, lang from user where pnumber != 0').fetchall():
+            try:
                 if a[1] == 'ru':
-                    await bot.send_photo(a[0], tuple(data.values())[0],
-                                         tuple(data.values())[1] + '\n Для перехода в главное меню нажмите /main')
+                    await bot.send_photo(a[0], tuple(data.values())[0], ru)
                 elif a[1] == 'uz':
-                    await bot.send_photo(a[0], tuple(data.values())[0], (gt.translate(
-                        tuple(data.values())[1] + "\n Для перехода в главное меню нажмите ", src='ru',
-                        dest='uz').text) + " " + '/asosiy_menu')
+                    await bot.send_photo(a[0], tuple(data.values())[0], uz)
+                    await asyncio.sleep(10)
                 elif a[1] == 'eng':
-                    await bot.send_photo(a[0], tuple(data.values())[0], (gt.translate(
-                        tuple(data.values())[1] + '\n Для перехода в главное меню нажмите',
-                        src='ru').text) + " " + '/main_menu')
-    except BotBlocked as b:
-        if b.match == "bot was blocked by the user":
-            print("Bot blocked")
+                    await bot.send_photo(a[0], tuple(data.values())[0], eng)
+                    await asyncio.sleep(10)
+            except BotBlocked as b:
+                if b.match == "bot was blocked by the user":
+                    print("Bot blocked")
+                    print(a[0])
+            except UserDeactivated as b:
+                if b.match == "user is deactivated":
+                    print("Bot blocked")
+                    print(a[0])
+            except ChatNotFound:
+                print("Bot blocked")
+                print(a[0])
+            except MessageNotModified:
+                print('ok')
+
+
+async def delete_null_orders():
+    cur.execute('delete from orders where address is null')
+    base.commit()
+    await bot.send_message(596927092, 'База очищенна')
+
+
+async def scheduler():
+    aioschedule.every().day.at("23:55").do(delete_null_orders)
+    while True:
+        await aioschedule.run_pending()
+        await asyncio.sleep(1)

@@ -30,6 +30,9 @@ send_order = KeyboardButton('📤Отправить заказ')
 cancel = KeyboardButton('❗Отмена')
 clear = KeyboardButton('🌀 Очистить корзину')
 make_order = KeyboardButton('👍🏽Оформить заказ')
+cash = KeyboardButton('💴Наличные')
+pay_me = KeyboardButton('💸Пэй Ми')
+click = KeyboardButton('💸Клик')
 
 mark_5 = KeyboardButton('Отлично 🌟🌟🌟🌟🌟')
 mark_4 = KeyboardButton('Хорошо 🌟🌟🌟🌟')
@@ -170,7 +173,7 @@ kb_mydata.add(phone, main_menu)
 
 kb_phone.add(phone, continue_order).row(back_to_menu)
 
-kb_address.add(location, send_order).row(main_menu)
+kb_address.add(location).row(cash, pay_me, click).row(main_menu)
 
 kb_kafe.row(kafe_1, kafe_2).row(main_menu, back_to_menu)
 

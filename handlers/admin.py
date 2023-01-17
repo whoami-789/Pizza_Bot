@@ -1,6 +1,7 @@
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
+import aioschedule
 
 from create_bot import bot, dp
 from keyboards import client_kb_ru, admin_kb
